@@ -278,47 +278,27 @@ AT-PIPRA, PO-DAMODARPUR, EAST CHAMPARAN, BIHAR -845416</textarea
               </div>
               <div class="form-group">
                 <label for="employeeId">Employee ID</label>
-                <input
-                  type="text"
-                  id="employeeId"
-                  required
-                />
+                <input type="text" id="employeeId" required />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label for="designation">Designation</label>
-                <input
-                  type="text"
-                  id="designation"
-                  required
-                />
+                <input type="text" id="designation" required />
               </div>
               <div class="form-group">
                 <label for="department">Department</label>
-                <input
-                  type="text"
-                  id="department"
-                  required
-                />
+                <input type="text" id="department" required />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label for="dateOfJoining">Date of Joining</label>
-                <input
-                  type="date"
-                  id="dateOfJoining"
-                  required
-                />
+                <input type="date" id="dateOfJoining" required />
               </div>
               <div class="form-group">
                 <label for="panNumber">PAN Number</label>
-                <input
-                  type="text"
-                  id="panNumber"
-                  placeholder="ABCDE1234F"
-                />
+                <input type="text" id="panNumber" placeholder="ABCDE1234F" />
               </div>
             </div>
           </div>
@@ -571,10 +551,30 @@ AT-PIPRA, PO-DAMODARPUR, EAST CHAMPARAN, BIHAR -845416</textarea
         calculateTotals();
       };
 
+      // PAN validation function
+      function isValidPAN(pan) {
+        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+        return panRegex.test(pan);
+      }
+
       document
         .getElementById("salaryForm")
         .addEventListener("submit", function (e) {
           e.preventDefault();
+
+          const pan = document.getElementById("panNumber").value.trim();
+          const basicSalary =
+            parseFloat(document.getElementById("basicSalary").value) || 0;
+
+          if (pan && !isValidPAN(pan)) {
+            alert("Invalid PAN number. It should be in format: ABCDE1234F");
+            return;
+          }
+
+          if (basicSalary <= 0) {
+            alert("Basic Salary must be greater than zero.");
+            return;
+          }
           generatePDF();
         });
 
@@ -823,6 +823,7 @@ AT-PIPRA, PO-DAMODARPUR, EAST CHAMPARAN, BIHAR -845416</textarea
         const fileName = `SalarySlip_${formData.employeeName}_${formData.salaryMonth}_${formData.salaryYear}.pdf`;
         doc.save(fileName);
       }
-    </script>
+   
+   </script>
   </body>
 </html>
