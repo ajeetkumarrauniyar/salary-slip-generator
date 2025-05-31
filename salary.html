@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Salary Slip Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        font-weight: 300;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 1.1em;
+      }
+
+      .form-container {
+        padding: 40px;
+      }
+
+      .section {
+        margin-bottom: 30px;
+        padding: 25px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        border-left: 4px solid #667eea;
+      }
+
+      .section h3 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.3em;
+        display: flex;
+        align-items: center;
+      }
+
+      .section h3::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        background: #667eea;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-group.full-width {
+        grid-column: span 2;
+      }
+
+      label {
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 8px;
+        font-size: 0.95em;
+      }
+
+      input,
+      select,
+      textarea {
+        padding: 12px 15px;
+        border: 2px solid #e1e5e9;
+        border-radius: 10px;
+        font-size: 1em;
+        transition: all 0.3s ease;
+        background: white;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .earnings-deductions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      .earnings,
+      .deductions {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #e1e5e9;
+      }
+
+      .earnings h4,
+      .deductions h4 {
+        color: #333;
+        margin-bottom: 15px;
+        text-align: center;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #667eea;
+      }
+
+      .currency-input {
+        position: relative;
+      }
+
+      .currency-input::before {
+        content: "₹";
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #667eea;
+        font-weight: bold;
+        z-index: 1;
+      }
+
+      .currency-input input {
+        padding-left: 35px;
+      }
+
+      .generate-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 40px;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: block;
+        margin: 30px auto 0;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+      }
+
+      .generate-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+      }
+
+      .generate-btn:active {
+        transform: translateY(-1px);
+      }
+
+      .totals-display {
+        margin-top: 20px;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        text-align: center;
+      }
+
+      .totals-display h4 {
+        margin-bottom: 10px;
+        font-size: 1.2em;
+      }
+
+      .total-amount {
+        font-size: 1.5em;
+        font-weight: bold;
+      }
+
+      @media (max-width: 768px) {
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+
+        .form-group.full-width {
+          grid-column: span 1;
+        }
+
+        .earnings-deductions {
+          grid-template-columns: 1fr;
+        }
+
+        .container {
+          margin: 10px;
+        }
+
+        .form-container {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>💼 Salary Slip Generator</h1>
+        <p>Professional salary slip generator with enhanced PDF layout</p>
+      </div>
+
+      <div class="form-container">
+        <form id="salaryForm">
+          <!-- Company Information -->
+          <div class="section">
+            <h3>🏢 Company Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="companyName">Company Name</label>
+                <input
+                  type="text"
+                  id="companyName"
+                  required
+                  value="IT MAVERICK SOLUTIONS"
+                />
+              </div>
+              <div class="form-group">
+                <label for="proprietorName">Proprietor Name</label>
+                <input
+                  type="text"
+                  id="proprietorName"
+                  required
+                  value="Ajeet Kumar"
+                />
+              </div>
+            </div>
+            <div class="form-group full-width">
+              <label for="companyAddress">Company Address</label>
+              <textarea id="companyAddress" rows="3" required>
+AT-PIPRA, PO-DAMODARPUR, EAST CHAMPARAN, BIHAR -845416</textarea
+              >
+            </div>
+          </div>
+
+          <!-- Employee Information -->
+          <div class="section">
+            <h3>👤 Employee Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="employeeName">Employee Name</label>
+                <input type="text" id="employeeName" required />
+              </div>
+              <div class="form-group">
+                <label for="employeeId">Employee ID</label>
+                <input
+                  type="text"
+                  id="employeeId"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="designation">Designation</label>
+                <input
+                  type="text"
+                  id="designation"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="department">Department</label>
+                <input
+                  type="text"
+                  id="department"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="dateOfJoining">Date of Joining</label>
+                <input
+                  type="date"
+                  id="dateOfJoining"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="panNumber">PAN Number</label>
+                <input
+                  type="text"
+                  id="panNumber"
+                  placeholder="ABCDE1234F"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Salary Period -->
+          <div class="section">
+            <h3>📅 Salary Period</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="salaryMonth">Month</label>
+                <select id="salaryMonth" required>
+                  <option value="">Select Month</option>
+                  <option value="January">January</option>
+                  <option value="February">February</option>
+                  <option value="March">March</option>
+                  <option value="April">April</option>
+                  <option value="May" selected>May</option>
+                  <option value="June">June</option>
+                  <option value="July">July</option>
+                  <option value="August">August</option>
+                  <option value="September">September</option>
+                  <option value="October">October</option>
+                  <option value="November">November</option>
+                  <option value="December">December</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="salaryYear">Year</label>
+                <input
+                  type="number"
+                  id="salaryYear"
+                  min="2020"
+                  max="2030"
+                  value="2025"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="workingDays">Total Working Days</label>
+                <input
+                  type="number"
+                  id="workingDays"
+                  min="1"
+                  max="31"
+                  value="21"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="presentDays">Days Present</label>
+                <input
+                  type="number"
+                  id="presentDays"
+                  min="0"
+                  max="31"
+                  value="21"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Earnings and Deductions -->
+          <div class="section">
+            <h3>💰 Salary Components</h3>
+            <div class="earnings-deductions">
+              <div class="earnings">
+                <h4>Earnings</h4>
+                <div class="form-group">
+                  <label for="basicSalary">Basic Salary</label>
+                  <div class="currency-input">
+                    <input
+                      type="number"
+                      id="basicSalary"
+                      step="0.01"
+                      required
+                      oninput="calculateTotals()"
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="hra">HRA</label>
+                  <div class="currency-input">
+                    <input
+                      type="number"
+                      id="hra"
+                      step="0.01"
+                      oninput="calculateTotals()"
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="conveyanceAllowance">Conveyance Allowance</label>
+                  <div class="currency-input">
+                    <input
+                      type="number"
+                      id="conveyanceAllowance"
+                      step="0.01"
+                      oninput="calculateTotals()"
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="medicalAllowance">Medical Allowance</label>
+                  <div class="currency-input">
+                    <input
+                      type="number"
+                      id="medicalAllowance"
+                      step="0.01"
+                      oninput="calculateTotals()"
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="otherAllowances">Other Allowances</label>
+                  <div class="currency-input">
+                    <input
+                      type="number"
+                      id="otherAllowances"
+                      step="0.01"
+                      oninput="calculateTotals()"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="deductions">
+                <h4>Deductions</h4>
+                <div class="form-group">
+                  <label for="providentFund">Provident Fund</label>
+                  <div class="currency-input">
+                    <input
+                      type="number"
+                      id="providentFund"
+                      step="0.01"
+                      oninput="calculateTotals()"
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="professionalTax">Professional Tax</label>
+                  <div class="currency-input">
+                    <input
+                      type="number"
+                      id="professionalTax"
+                      step="0.01"
+                      oninput="calculateTotals()"
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="tds">TDS</label>
+                  <div class="currency-input">
+                    <input
+                      type="number"
+                      id="tds"
+                      step="0.01"
+                      oninput="calculateTotals()"
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="otherDeductions">Other Deductions</label>
+                  <div class="currency-input">
+                    <input
+                      type="number"
+                      id="otherDeductions"
+                      step="0.01"
+                      oninput="calculateTotals()"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="totals-display" id="totalsDisplay">
+              <h4>Net Salary Calculation</h4>
+              <div>
+                Total Earnings:
+                <span id="totalEarningsDisplay">Rs. 15,090.00</span>
+              </div>
+              <div>
+                Total Deductions:
+                <span id="totalDeductionsDisplay">Rs. 135.00</span>
+              </div>
+              <div class="total-amount">
+                Net Salary: <span id="netSalaryDisplay">Rs. 14,955.00</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="generate-btn">
+            Generate Salary Slip PDF
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Function to format currency with rupee symbol
+      function formatCurrency(amount) {
+        return `Rs. ${amount.toLocaleString("en-IN", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`;
+      }
+
+      // Function to calculate and display totals in real-time
+      function calculateTotals() {
+        const basicSalary =
+          parseFloat(document.getElementById("basicSalary").value) || 0;
+        const hra = parseFloat(document.getElementById("hra").value) || 0;
+        const conveyanceAllowance =
+          parseFloat(document.getElementById("conveyanceAllowance").value) || 0;
+        const medicalAllowance =
+          parseFloat(document.getElementById("medicalAllowance").value) || 0;
+        const otherAllowances =
+          parseFloat(document.getElementById("otherAllowances").value) || 0;
+
+        const providentFund =
+          parseFloat(document.getElementById("providentFund").value) || 0;
+        const professionalTax =
+          parseFloat(document.getElementById("professionalTax").value) || 0;
+        const tds = parseFloat(document.getElementById("tds").value) || 0;
+        const otherDeductions =
+          parseFloat(document.getElementById("otherDeductions").value) || 0;
+
+        const totalEarnings =
+          basicSalary +
+          hra +
+          conveyanceAllowance +
+          medicalAllowance +
+          otherAllowances;
+        const totalDeductions =
+          providentFund + professionalTax + tds + otherDeductions;
+        const netSalary = totalEarnings - totalDeductions;
+
+        document.getElementById("totalEarningsDisplay").textContent =
+          formatCurrency(totalEarnings);
+        document.getElementById("totalDeductionsDisplay").textContent =
+          formatCurrency(totalDeductions);
+        document.getElementById("netSalaryDisplay").textContent =
+          formatCurrency(netSalary);
+      }
+
+      // Initialize calculations on page load
+      window.onload = function () {
+        calculateTotals();
+      };
+
+      document
+        .getElementById("salaryForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          generatePDF();
+        });
+
+      function generatePDF() {
+        const { jsPDF } = window.jspdf;
+
+        // Create new PDF with proper settings
+        const doc = new jsPDF({
+          orientation: "portrait",
+          unit: "mm",
+          format: "a4",
+          putOnlyUsedFonts: true,
+          floatPrecision: 16,
+        });
+
+        // Get form data
+        const formData = {
+          companyName: document.getElementById("companyName").value,
+          proprietorName: document.getElementById("proprietorName").value,
+          companyAddress: document.getElementById("companyAddress").value,
+          employeeName: document.getElementById("employeeName").value,
+          employeeId: document.getElementById("employeeId").value,
+          designation: document.getElementById("designation").value,
+          department: document.getElementById("department").value,
+          dateOfJoining: document.getElementById("dateOfJoining").value,
+          panNumber: document.getElementById("panNumber").value,
+          salaryMonth: document.getElementById("salaryMonth").value,
+          salaryYear: document.getElementById("salaryYear").value,
+          workingDays: parseInt(document.getElementById("workingDays").value),
+          presentDays: parseInt(document.getElementById("presentDays").value),
+          basicSalary:
+            parseFloat(document.getElementById("basicSalary").value) || 0,
+          hra: parseFloat(document.getElementById("hra").value) || 0,
+          conveyanceAllowance:
+            parseFloat(document.getElementById("conveyanceAllowance").value) ||
+            0,
+          medicalAllowance:
+            parseFloat(document.getElementById("medicalAllowance").value) || 0,
+          otherAllowances:
+            parseFloat(document.getElementById("otherAllowances").value) || 0,
+          providentFund:
+            parseFloat(document.getElementById("providentFund").value) || 0,
+          professionalTax:
+            parseFloat(document.getElementById("professionalTax").value) || 0,
+          tds: parseFloat(document.getElementById("tds").value) || 0,
+          otherDeductions:
+            parseFloat(document.getElementById("otherDeductions").value) || 0,
+        };
+
+        // Calculate totals
+        const totalEarnings =
+          formData.basicSalary +
+          formData.hra +
+          formData.conveyanceAllowance +
+          formData.medicalAllowance +
+          formData.otherAllowances;
+        const totalDeductions =
+          formData.providentFund +
+          formData.professionalTax +
+          formData.tds +
+          formData.otherDeductions;
+        const netSalary = totalEarnings - totalDeductions;
+
+        // PDF Generation with enhanced layout
+        let yPos = 20;
+
+        // Header
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text(formData.companyName, 105, yPos, { align: "center" });
+        yPos += 10;
+
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        const addressLines = formData.companyAddress.split("\n");
+        addressLines.forEach((line) => {
+          doc.text(line.trim(), 105, yPos, { align: "center" });
+          yPos += 6;
+        });
+
+        yPos += 5;
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text("SALARY SLIP", 105, yPos, { align: "center" });
+        yPos += 15;
+
+        // Employee Information
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+
+        // Left column
+        doc.text(`Employee Name: ${formData.employeeName}`, 20, yPos);
+        doc.text(`Employee ID: ${formData.employeeId}`, 20, yPos + 8);
+        doc.text(`Designation: ${formData.designation}`, 20, yPos + 16);
+        doc.text(`Department: ${formData.department}`, 20, yPos + 24);
+
+        // Right column
+        doc.text(
+          `Month/Year: ${formData.salaryMonth} ${formData.salaryYear}`,
+          120,
+          yPos
+        );
+        doc.text(`Date of Joining: ${formData.dateOfJoining}`, 120, yPos + 8);
+        doc.text(`PAN: ${formData.panNumber}`, 120, yPos + 16);
+        doc.text(
+          `Working Days: ${formData.presentDays}/${formData.workingDays}`,
+          120,
+          yPos + 24
+        );
+
+        yPos += 40;
+
+        // Prepare earnings and deductions data
+        const earningsData = [];
+        const deductionsData = [];
+
+        // Format currency values with rupee symbol
+        const formatAmount = (amount) => `Rs. ${amount.toFixed(2)}`;
+
+        // Add earnings (only non-zero values)
+        if (formData.basicSalary > 0)
+          earningsData.push([
+            "Basic Salary",
+            formatAmount(formData.basicSalary),
+          ]);
+        if (formData.hra > 0)
+          earningsData.push(["HRA", formatAmount(formData.hra)]);
+        if (formData.conveyanceAllowance > 0)
+          earningsData.push([
+            "Conveyance Allowance",
+            formatAmount(formData.conveyanceAllowance),
+          ]);
+        if (formData.medicalAllowance > 0)
+          earningsData.push([
+            "Medical Allowance",
+            formatAmount(formData.medicalAllowance),
+          ]);
+        if (formData.otherAllowances > 0)
+          earningsData.push([
+            "Other Allowances",
+            formatAmount(formData.otherAllowances),
+          ]);
+
+        // Add deductions (only non-zero values)
+        if (formData.providentFund > 0)
+          deductionsData.push([
+            "Provident Fund",
+            formatAmount(formData.providentFund),
+          ]);
+        if (formData.professionalTax > 0)
+          deductionsData.push([
+            "Professional Tax",
+            formatAmount(formData.professionalTax),
+          ]);
+        if (formData.tds > 0)
+          deductionsData.push(["TDS", formatAmount(formData.tds)]);
+        if (formData.otherDeductions > 0)
+          deductionsData.push([
+            "Other Deductions",
+            formatAmount(formData.otherDeductions),
+          ]);
+
+        // Create enhanced salary table layout matching the sample
+
+        // Draw main table border
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.5);
+        doc.rect(20, yPos, 170, 120); // Main table border
+
+        // Draw vertical line to separate earnings and deductions
+        doc.line(105, yPos, 105, yPos + 120);
+
+        // Draw horizontal line for headers
+        doc.line(20, yPos + 15, 190, yPos + 15);
+
+        // Draw horizontal line before totals
+        doc.line(20, yPos + 95, 190, yPos + 95);
+
+        // Headers
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Earnings", 62, yPos + 10, { align: "center" });
+        doc.text("Deductions", 147, yPos + 10, { align: "center" });
+
+        // Earnings section
+        let earningsY = yPos + 25;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+
+        earningsData.forEach((item, index) => {
+          doc.text(item[0], 25, earningsY);
+          doc.text(item[1], 100, earningsY, { align: "right" });
+          earningsY += 8;
+        });
+
+        // Deductions section
+        let deductionsY = yPos + 25;
+        deductionsData.forEach((item, index) => {
+          doc.text(item[0], 110, deductionsY);
+          doc.text(item[1], 185, deductionsY, { align: "right" });
+          deductionsY += 8;
+        });
+
+        // Totals section
+        doc.setFont("helvetica", "bold");
+        doc.text("Total Earnings", 25, yPos + 105);
+        doc.text(formatAmount(totalEarnings), 100, yPos + 105, {
+          align: "right",
+        });
+        doc.text("Total Deductions", 110, yPos + 105);
+        doc.text(formatAmount(totalDeductions), 185, yPos + 105, {
+          align: "right",
+        });
+
+        yPos += 125;
+
+        yPos = yPos + 10;
+
+        // NET SALARY with enhanced styling - boxed layout
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.8);
+        doc.rect(20, yPos, 170, 20); // Box around net salary
+
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("NET SALARY", 25, yPos + 13);
+        doc.text(formatAmount(netSalary), 185, yPos + 13, { align: "right" });
+
+        yPos += 35;
+
+        // Footer
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.text(
+          "This is a computer generated salary slip and does not require signature.",
+          105,
+          yPos,
+          { align: "center" }
+        );
+
+        yPos += 15;
+        doc.setFont("helvetica", "bold");
+        doc.text(`Proprietor: ${formData.proprietorName}`, 140, yPos);
+
+        // Save PDF with proper encoding
+        const fileName = `SalarySlip_${formData.employeeName}_${formData.salaryMonth}_${formData.salaryYear}.pdf`;
+        doc.save(fileName);
+      }
+    </script>
+  </body>
+</html>
